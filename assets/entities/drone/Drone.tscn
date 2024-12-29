@@ -1,0 +1,144 @@
+[gd_scene load_steps=8 format=2]
+
+[ext_resource path="res://assets/entities/drone/drone.png" type="Texture" id=1]
+[ext_resource path="res://assets/entities/drone/Drone.gd" type="Script" id=3]
+
+[sub_resource type="Animation" id=1]
+resource_name = "fire"
+length = 0.4
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 12, 13, 14, 15 ]
+}
+
+[sub_resource type="Animation" id=2]
+resource_name = "idle"
+length = 0.4
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 0, 1, 2, 3 ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:repair_effect_amount")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ 0.0 ]
+}
+
+[sub_resource type="Animation" id=3]
+resource_name = "scan_end"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 1,
+"values": [ 7, 5, 4 ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:repair_effect_amount")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.3 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ 1.0, 0.0 ]
+}
+
+[sub_resource type="Animation" id=4]
+resource_name = "scan_idle"
+length = 0.4
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 8, 9, 10, 11 ]
+}
+
+[sub_resource type="Animation" id=5]
+resource_name = "scan_start"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 1,
+"values": [ 4, 5, 7 ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:repair_effect_amount")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.3 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ 0.0, 1.0 ]
+}
+
+[node name="Drone" type="Sprite"]
+texture = ExtResource( 1 )
+vframes = 4
+hframes = 4
+frame = 7
+script = ExtResource( 3 )
+repair_effect_amount = 1.0
+
+[node name="follow_offset" type="Position2D" parent="."]
+position = Vector2( 176, 224 )
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+autoplay = "idle"
+anims/fire = SubResource( 1 )
+anims/idle = SubResource( 2 )
+anims/scan_end = SubResource( 3 )
+anims/scan_idle = SubResource( 4 )
+anims/scan_start = SubResource( 5 )
+next/scan_end = "idle"
+next/scan_start = "scan_idle"

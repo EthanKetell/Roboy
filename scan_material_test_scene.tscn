@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://icon.png" type="Texture" id=1]
+[ext_resource path="res://assets/entities/switch/switch.png" type="Texture" id=2]
+[ext_resource path="res://assets/entities/drone/repair.material" type="Material" id=3]
+
+
+[node name="Sprite" type="Sprite"]
+material = ExtResource( 3 )
+texture = ExtResource( 2 )
+hframes = 3
+
+[node name="icon" type="Sprite" parent="."]
+material = ExtResource( 3 )
+position = Vector2( -484.1, -48.5932 )
+texture = ExtResource( 1 )

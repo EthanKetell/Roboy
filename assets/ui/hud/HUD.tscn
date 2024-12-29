@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://assets/ui/dialog/Dialog.tscn" type="PackedScene" id=1]
+[ext_resource path="res://assets/ui/hud/HUD.gd" type="Script" id=2]
+
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource( 2 )
+
+[node name="Dialog" parent="." instance=ExtResource( 1 )]
+visible = false

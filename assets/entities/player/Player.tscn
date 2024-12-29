@@ -1,0 +1,454 @@
+[gd_scene load_steps=29 format=2]
+
+[ext_resource path="res://assets/entities/player/Player.gd" type="Script" id=1]
+[ext_resource path="res://assets/entities/player/grapple_parts/arm.png" type="Texture" id=2]
+[ext_resource path="res://assets/entities/player/grapple_parts/hand.png" type="Texture" id=3]
+[ext_resource path="res://assets/entities/player/roboy.png" type="Texture" id=4]
+[ext_resource path="res://assets/state_machine/state_machine.gd" type="Script" id=5]
+[ext_resource path="res://assets/entities/player/states/idle.gd" type="Script" id=6]
+[ext_resource path="res://assets/entities/player/states/move.gd" type="Script" id=7]
+[ext_resource path="res://assets/entities/player/states/in_air.gd" type="Script" id=8]
+[ext_resource path="res://assets/entities/player/states/attack.gd" type="Script" id=9]
+[ext_resource path="res://assets/entities/player/states/grapple.gd" type="Script" id=10]
+[ext_resource path="res://assets/fonts/Comfortaa-Bold.ttf" type="DynamicFontData" id=11]
+[ext_resource path="res://assets/entities/player/states/recoil.gd" type="Script" id=12]
+
+[sub_resource type="DynamicFont" id=1]
+size = 32
+outline_size = 2
+outline_color = Color( 0, 0, 0, 1 )
+use_filter = true
+font_data = ExtResource( 11 )
+
+[sub_resource type="RectangleShape2D" id=2]
+extents = Vector2( 192, 136 )
+
+[sub_resource type="GDScript" id=3]
+script/source = "extends Position2D
+
+var active = false
+var connected = false
+
+export var speed = 2000
+export var max_distance = 1000
+export var start_distance = 70
+
+onready var player = get_parent()
+onready var arm := $arm
+onready var hand := $hand
+
+var pendulum:RigidBody2D
+var spring:DampedSpringJoint2D
+
+func _ready():
+	visible = false
+	hand.set_physics_process(false)
+
+func fire():
+	active = true
+	visible = true
+	connected = false
+
+	hand.set_as_toplevel(true)
+	hand.global_position = global_position + global_position.direction_to(get_global_mouse_position())*start_distance
+	hand.fire(speed, max_distance)
+	hand.set_physics_process(true)
+	yield(hand, \"travel_done\")
+	hand.set_physics_process(false)
+	if hand.success:
+		connected = true
+	else:
+		reset()
+
+func reset():
+	active = false
+	visible = false
+	connected = false
+	rotation = 0
+	hand.set_as_toplevel(false)
+	hand.position = Vector2(70, 0)
+	hand.rotation = 0
+
+func _process(delta):
+	arm.points[1] = hand.global_position - global_position
+"
+
+[sub_resource type="GDScript" id=4]
+script/source = "extends KinematicBody2D
+
+signal travel_done
+
+var speed
+var max_distance
+
+var distance = 0
+var success = false
+var velocity = Vector2()
+
+func fire(speed, max_distance):
+	self.look_at(get_global_mouse_position())
+	self.distance = 0
+	self.speed = speed
+	self.max_distance = max_distance
+	self.velocity = Vector2.RIGHT.rotated(rotation)*speed
+
+func _physics_process(delta):
+	distance += speed*delta
+	var collision = move_and_collide(velocity*delta)
+	if collision:
+		success = true
+		rotation = (-collision.normal).angle()
+		emit_signal(\"travel_done\")
+	if distance >= max_distance:
+		success = false
+		emit_signal(\"travel_done\")
+
+"
+
+[sub_resource type="CircleShape2D" id=5]
+radius = 6.30292
+
+[sub_resource type="Animation" id=6]
+length = 0.5
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3, 0.4 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 35, 36, 37, 38, 39 ]
+}
+tracks/1/type = "method"
+tracks/1/path = NodePath("..")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0.2 ),
+"transitions": PoolRealArray( 1 ),
+"values": [ {
+"args": [  ],
+"method": "attack"
+} ]
+}
+
+[sub_resource type="Animation" id=7]
+length = 0.4
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 41, 42, 43, 44 ]
+}
+tracks/1/type = "method"
+tracks/1/path = NodePath("..")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0.1 ),
+"transitions": PoolRealArray( 1 ),
+"values": [ {
+"args": [  ],
+"method": "attack"
+} ]
+}
+
+[sub_resource type="Animation" id=8]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 21 ]
+}
+
+[sub_resource type="Animation" id=9]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 49 ]
+}
+
+[sub_resource type="Animation" id=10]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 48 ]
+}
+
+[sub_resource type="Animation" id=11]
+length = 0.3
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 1,
+"values": [ 45, 46, 47 ]
+}
+tracks/1/type = "method"
+tracks/1/path = NodePath("..")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray(  ),
+"transitions": PoolRealArray(  ),
+"values": [  ]
+}
+
+[sub_resource type="Animation" id=12]
+length = 0.4
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 0, 1, 2, 3 ]
+}
+
+[sub_resource type="Animation" id=13]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 20 ]
+}
+
+[sub_resource type="Animation" id=14]
+resource_name = "recoil"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.3 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 1,
+"values": [ 15, 16, 17 ]
+}
+
+[sub_resource type="Animation" id=15]
+length = 0.9
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 25, 26, 27, 28, 29, 30, 31, 32, 33 ]
+}
+
+[sub_resource type="Animation" id=16]
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 ]
+}
+
+[node name="Player" type="KinematicBody2D"]
+z_index = 999
+collision_layer = 2
+script = ExtResource( 1 )
+jump_height = 300
+
+[node name="Label" type="Label" parent="."]
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+margin_left = -20.0
+margin_top = -142.0
+margin_right = 20.0
+margin_bottom = -128.0
+grow_horizontal = 2
+grow_vertical = 0
+custom_fonts/font = SubResource( 1 )
+align = 1
+valign = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="flip_h_remotes" type="Node2D" parent="."]
+
+[node name="interact_area_remote" type="RemoteTransform2D" parent="flip_h_remotes"]
+position = Vector2( 120, -56 )
+remote_path = NodePath("../../interact_area")
+update_rotation = false
+update_scale = false
+
+[node name="attack_area_remote" type="RemoteTransform2D" parent="flip_h_remotes"]
+position = Vector2( 96, 0 )
+remote_path = NodePath("../../attack_area")
+update_rotation = false
+update_scale = false
+
+[node name="grapple_arm_remote" type="RemoteTransform2D" parent="flip_h_remotes"]
+position = Vector2( 24, -56 )
+remote_path = NodePath("../../grapple_arm")
+update_rotation = false
+update_scale = false
+
+[node name="interact_area" type="Area2D" parent="."]
+position = Vector2( 120, -56 )
+collision_layer = 0
+collision_mask = 8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="interact_area"]
+shape = SubResource( 2 )
+
+[node name="attack_area" type="Area2D" parent="."]
+position = Vector2( 96, 0 )
+collision_layer = 0
+collision_mask = 4
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="attack_area"]
+polygon = PoolVector2Array( -32, -128, 32, -128, 32, 72, -32, 72 )
+
+[node name="grapple_arm" type="Position2D" parent="."]
+position = Vector2( 24, -56 )
+script = SubResource( 3 )
+
+[node name="arm" type="Line2D" parent="grapple_arm"]
+z_index = -1
+z_as_relative = false
+points = PoolVector2Array( 0, 0, 70, 0 )
+width = 20.0
+default_color = Color( 1, 1, 1, 1 )
+texture = ExtResource( 2 )
+texture_mode = 2
+
+[node name="hand" type="KinematicBody2D" parent="grapple_arm"]
+position = Vector2( 70, 0 )
+z_index = 1
+z_as_relative = false
+collision_layer = 0
+script = SubResource( 4 )
+
+[node name="Sprite" type="Sprite" parent="grapple_arm/hand"]
+texture = ExtResource( 3 )
+offset = Vector2( 4.835, 0 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="grapple_arm/hand"]
+position = Vector2( 4, 0 )
+shape = SubResource( 5 )
+
+[node name="Sprite" type="Sprite" parent="."]
+use_parent_material = true
+texture = ExtResource( 4 )
+offset = Vector2( 0, -48 )
+vframes = 10
+hframes = 5
+frame = 17
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Sprite"]
+anims/attack_1 = SubResource( 6 )
+anims/attack_2 = SubResource( 7 )
+anims/fall = SubResource( 8 )
+anims/grapple_air = SubResource( 9 )
+anims/grapple_ground = SubResource( 10 )
+anims/grapple_windup = SubResource( 11 )
+anims/idle = SubResource( 12 )
+anims/jump = SubResource( 13 )
+anims/recoil = SubResource( 14 )
+anims/run = SubResource( 15 )
+anims/walk = SubResource( 16 )
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+polygon = PoolVector2Array( -48, 64, -32, 72, 32, 72, 48, 64, 48, -88, 32, -104, -32, -104, -48, -88 )
+
+[node name="state_machine" type="Node" parent="."]
+script = ExtResource( 5 )
+default_state = "idle"
+
+[node name="idle" type="Node" parent="state_machine"]
+script = ExtResource( 6 )
+
+[node name="move" type="Node" parent="state_machine"]
+script = ExtResource( 7 )
+
+[node name="in_air" type="Node" parent="state_machine"]
+script = ExtResource( 8 )
+
+[node name="attack" type="Node" parent="state_machine"]
+script = ExtResource( 9 )
+
+[node name="grapple" type="Node" parent="state_machine"]
+script = ExtResource( 10 )
+
+[node name="recoil" type="Node" parent="state_machine"]
+script = ExtResource( 12 )
+[connection signal="area_entered" from="interact_area" to="." method="set_interact_target"]
+[connection signal="area_exited" from="interact_area" to="." method="set_interact_target" binds= [ true ]]
+[connection signal="body_entered" from="interact_area" to="." method="set_interact_target"]
+[connection signal="body_exited" from="interact_area" to="." method="set_interact_target" binds= [ true ]]
